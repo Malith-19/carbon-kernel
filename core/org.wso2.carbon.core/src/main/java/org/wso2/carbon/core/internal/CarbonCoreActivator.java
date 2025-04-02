@@ -90,6 +90,10 @@ public class CarbonCoreActivator implements BundleActivator {
         if (log.isDebugEnabled()) {
             log.debug(providerName + " security provider is successfully registered in JVM.");
         }
+
+        provider = (Provider) (Class.forName("org.bouncycastle.jsse.provider.BouncyCastleJsseProvider")).
+                getDeclaredConstructor().newInstance();
+        Security.insertProviderAt(provider, 1);
     }
 
     public void stop(BundleContext context) throws Exception {
