@@ -11417,7 +11417,8 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
                 ExpressionOperation.SW.toString().equals(condition.getOperation()) ||
                 ExpressionOperation.EW.toString().equals(condition.getOperation()) ||
                 ExpressionOperation.GE.toString().equals(condition.getOperation()) ||
-                ExpressionOperation.LE.toString().equals(condition.getOperation()));
+                ExpressionOperation.LE.toString().equals(condition.getOperation()) ||
+                ExpressionOperation.NE.toString().equals(condition.getOperation()));
     }
 
     private boolean isAnInternalRole(String roleName) {

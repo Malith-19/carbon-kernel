@@ -4634,13 +4634,22 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                     sqlBuilder.where("LOWER(U.UM_USER_NAME) LIKE LOWER(?)", expressionCondition.getAttributeValue()
                             + "%");
                 }
+            } else if (ExpressionOperation.NE.toString().equals(expressionCondition.getOperation()) &&
+                    ExpressionAttribute.USERNAME.toString().equals(expressionCondition.getAttributeName())) {
+                if (isCaseSensitiveUsername()) {
+                    sqlBuilder.where("U.UM_USER_NAME <> ?",
+                            expressionCondition.getAttributeValue());
+                } else {
+                    sqlBuilder.where("LOWER(U.UM_USER_NAME) <> LOWER(?)",
+                            expressionCondition.getAttributeValue());
+                }
             } else {
                 // Claim filtering
                 if (!(MYSQL.equals(dbType) || MARIADB.equals(dbType)) || totalMultiGroupFilters > 1 && totalMulitClaimFitlers > 1) {
                     multiClaimQueryBuilder(sqlBuilder, header, hitClaimFilter, expressionCondition);
                     hitClaimFilter = true;
                 } else {
-                    multiClaimMySqlQueryBuilder(sqlBuilder, claimFilterCount, expressionCondition);
+                    multiClaimMySqlQueryBuilder(sqlBuilder, header, claimFilterCount, expressionCondition);
                     claimFilterCount++;
                 }
             }
@@ -4747,16 +4756,42 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
         if (hitFirstRound) {
             sqlBuilder.updateSql(" INTERSECT " + header.getSql());
             addingWheres(header, sqlBuilder);
-            buildClaimWhereConditions(sqlBuilder, expressionCondition.getAttributeName(),
+            buildClaimWhereConditions(sqlBuilder, header, expressionCondition.getAttributeName(),
                     expressionCondition.getOperation(), expressionCondition.getAttributeValue());
         } else {
-            buildClaimWhereConditions(sqlBuilder, expressionCondition.getAttributeName(),
+            buildClaimWhereConditions(sqlBuilder, header, expressionCondition.getAttributeName(),
                     expressionCondition.getOperation(), expressionCondition.getAttributeValue());
         }
     }
 
-    private void buildClaimWhereConditions(SqlBuilder sqlBuilder, String attributeName, String operation,
-                                           String attributeValue) {
+    private void buildClaimWhereConditions(SqlBuilder sqlBuilder, SqlBuilder header, String attributeName,
+                                           String operation, String attributeValue) {
+
+        if (ExpressionOperation.NE.toString().equals(operation)) {
+            /*
+             * When operation is NE (Not Equal), consider both users whose attribute value does not match the
+             * specified value and users who do not have the attribute configured.
+             */
+
+            // Build a subquery to identify users to exclude.
+            SqlBuilder usersToExcludeSqlBuilder = new SqlBuilder(new StringBuilder(header.getSql()));
+            addingWheres(sqlBuilder, usersToExcludeSqlBuilder);
+            usersToExcludeSqlBuilder.where("UA.UM_ATTR_NAME = ?", attributeName);
+            if (isCaseSensitiveUsername()) {
+                usersToExcludeSqlBuilder.where("LOWER(UA.UM_ATTR_VALUE) = LOWER(?)", attributeValue);
+            } else {
+                usersToExcludeSqlBuilder.where("UA.UM_ATTR_VALUE = ?", attributeValue);
+            }
+
+            // Retrieve the subquery SQL string and its ordered parameters.
+            String subQuerySqlString  = usersToExcludeSqlBuilder.getQuery();
+            List<Object> subQueryParams  = usersToExcludeSqlBuilder.getOrderedParameters();
+
+            // Append the NE condition query fragment to the main SqlBuilder.
+            String neConditionFragment = " AND U.UM_USER_NAME NOT IN (" + subQuerySqlString + ") ";
+            sqlBuilder.appendParameterizedSqlFragment(neConditionFragment, subQueryParams);
+            return;
+        }
 
         sqlBuilder.where("UA.UM_ATTR_NAME = ?", attributeName);
 
@@ -4787,11 +4822,11 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
         }
     }
 
-    private void multiClaimMySqlQueryBuilder(SqlBuilder sqlBuilder, int claimFilterCount,
+    private void multiClaimMySqlQueryBuilder(SqlBuilder sqlBuilder, SqlBuilder header, int claimFilterCount,
                                              ExpressionCondition expressionCondition) {
 
         if (claimFilterCount == 0) {
-            buildClaimWhereConditions(sqlBuilder, expressionCondition.getAttributeName()
+            buildClaimWhereConditions(sqlBuilder, header, expressionCondition.getAttributeName()
                     , expressionCondition.getOperation(), expressionCondition.getAttributeValue());
         } else {
             buildClaimConditionWithOROperator(sqlBuilder, expressionCondition.getAttributeName(),
@@ -4827,6 +4862,14 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                 sqlBuilder.where("UA.UM_ATTR_VALUE LIKE ?", attributeValue + "%");
             } else {
                 sqlBuilder.where("LOWER(UA.UM_ATTR_VALUE) LIKE LOWER(?)", attributeValue + "%");
+            }
+        } else if (ExpressionOperation.NE.toString().equals(operation)) {
+            if (isCaseSensitiveUsername()) {
+                sqlBuilder.updateSqlWithOROperation(
+                        "UA.UM_ATTR_VALUE <> ?", attributeValue);
+            } else {
+                sqlBuilder.updateSqlWithOROperation(
+                        "LOWER(UA.UM_ATTR_VALUE) <> LOWER(?)", attributeValue);
             }
         }
     }
