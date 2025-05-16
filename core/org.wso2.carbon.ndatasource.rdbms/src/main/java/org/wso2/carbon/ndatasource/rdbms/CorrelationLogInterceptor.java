@@ -78,6 +78,7 @@ public class CorrelationLogInterceptor extends AbstractQueryReport {
 
         // Initialize enabled log fields
         String fieldConfig = System.getProperty(JDBC_LOGGING_FIELDS_PROPERTY);
+        // If null, use default fields; if empty, no fields will be used
         if (fieldConfig == null) {
             this.enabledJdbcLogFields = EnumSet.of(JdbcLogField.METHOD_NAME, JdbcLogField.QUERY,
                     JdbcLogField.CONNECTION_URL);
