@@ -28,11 +28,12 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -49,20 +50,47 @@ public class CorrelationLogInterceptor extends AbstractQueryReport {
     private static final String CORRELATION_LOG_SYSTEM_PROPERTY = "enableCorrelationLogs";
     private static final String BLACKLISTED_THREADS_SYSTEM_PROPERTY =
             "org.wso2.CorrelationLogInterceptor.BlacklistedThreads";
+    private static final String JDBC_LOGGING_FIELDS_PROPERTY =
+            "org.wso2.CorrelationLogInterceptor.JdbcLogFields";
     private static final String[] DEFAULT_BLACKLISTED_THREADS = {"MessageDeliveryTaskThreadPool", "HumanTaskServer" ,
             "BPELServer", "CarbonDeploymentSchedulerThread"};
     private List<String> blacklistedThreadList = new ArrayList<>();
+    private final EnumSet<JdbcLogField> enabledJdbcLogFields;
     private boolean isEnableCorrelationLogs;
 
-    public CorrelationLogInterceptor() {
-        String blacklistedThreadNames = System.getProperty(BLACKLISTED_THREADS_SYSTEM_PROPERTY);
+    public enum JdbcLogField {
+        METHOD_NAME,
+        QUERY,
+        CONNECTION_URL,
+        DATABASE_NAME
+    }
 
+    public CorrelationLogInterceptor() {
+
+        // Set blacklisted threads
+        String blacklistedThreadNames = System.getProperty(BLACKLISTED_THREADS_SYSTEM_PROPERTY);
         if (blacklistedThreadNames == null) {
             blacklistedThreadList.addAll(Arrays.asList(DEFAULT_BLACKLISTED_THREADS));
         }
-
         if (!StringUtils.isEmpty(blacklistedThreadNames)) {
             blacklistedThreadList.addAll(Arrays.asList(StringUtils.split(blacklistedThreadNames, ',')));
+        }
+
+        // Initialize enabled log fields
+        String fieldConfig = System.getProperty(JDBC_LOGGING_FIELDS_PROPERTY);
+        // If null, use default fields; if empty, no fields will be used
+        if (fieldConfig == null) {
+            this.enabledJdbcLogFields = EnumSet.of(JdbcLogField.METHOD_NAME, JdbcLogField.QUERY,
+                    JdbcLogField.CONNECTION_URL);
+        } else {
+            this.enabledJdbcLogFields = EnumSet.noneOf(JdbcLogField.class);
+            for (String field : fieldConfig.split(",")) {
+                try {
+                    this.enabledJdbcLogFields.add(JdbcLogField.valueOf(field.trim().toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    log.warn("Unknown JDBC log field: " + field);
+                }
+            }
         }
 
         isEnableCorrelationLogs = Boolean.parseBoolean(System.getProperty(CORRELATION_LOG_SYSTEM_PROPERTY));
@@ -209,15 +237,31 @@ public class CorrelationLogInterceptor extends AbstractQueryReport {
                 return;
             }
 
-            DatabaseMetaData metaData = preparedStatement.getConnection().getMetaData();
             if (correlationLog.isInfoEnabled()) {
                 List<String> logPropertiesList = new ArrayList<>();
+
+                // Always log core fields regardless of config.
                 logPropertiesList.add(Long.toString(delta));
                 logPropertiesList.add(CORRELATION_LOG_CALL_TYPE_VALUE);
                 logPropertiesList.add(Long.toString(start));
-                logPropertiesList.add(methodName);
-                logPropertiesList.add(this.query);
-                logPropertiesList.add(metaData.getURL());
+
+                Connection connection = preparedStatement.getConnection();
+                for (JdbcLogField field : enabledJdbcLogFields) {
+                    switch (field) {
+                        case METHOD_NAME:
+                            logPropertiesList.add(methodName);
+                            break;
+                        case QUERY:
+                            logPropertiesList.add(this.query);
+                            break;
+                        case CONNECTION_URL:
+                            logPropertiesList.add(connection.getMetaData().getURL());
+                            break;
+                        case DATABASE_NAME:
+                            logPropertiesList.add(connection.getCatalog());
+                            break;
+                    }
+                }
                 correlationLog.info(createFormattedLog(logPropertiesList));
             }
         }
