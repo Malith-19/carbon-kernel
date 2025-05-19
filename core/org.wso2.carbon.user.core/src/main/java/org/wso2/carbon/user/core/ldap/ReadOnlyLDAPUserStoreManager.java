@@ -734,6 +734,8 @@ public class ReadOnlyLDAPUserStoreManager extends AbstractUserStoreManager {
                                         // Ignore transforming objectGUID to UUID canonical format
                                         attr = new String(Base64.encodeBase64((byte[]) attObject));
                                     }
+                                } else {
+                                    attr = new String(Base64.encodeBase64((byte[]) attObject));
                                 }
                             } else {
                                 attr = new String(Base64.encodeBase64((byte[]) attObject));
