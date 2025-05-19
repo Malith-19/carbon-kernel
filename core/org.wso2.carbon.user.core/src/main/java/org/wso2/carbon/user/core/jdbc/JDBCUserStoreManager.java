@@ -2781,7 +2781,7 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                     if (param == null) {
                         throw new UserStoreException("Invalid data provided");
                     } else if (param instanceof String) {
-                        if (isStoreUserAttributeAsUnicode()) {
+                        if (shouldUseNString(dbConnection)) {
                             prepStmt.setNString(i + 1, (String) param);
                         } else {
                             prepStmt.setString(i + 1, (String) param);
@@ -3249,7 +3249,7 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
             prepStmt = dbConnection.prepareStatement(sqlStmt);
             int count = 0;
             prepStmt.setString(++count, property);
-            if (isStoreUserAttributeAsUnicode()){
+            if (shouldUseNString(dbConnection)){
                 prepStmt.setNString(++count, value);
             } else {
                 prepStmt.setString(++count, value);
@@ -3625,6 +3625,7 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                 localConnection = true;
                 dbConnection = getDBConnection();
             }
+            boolean useNString = shouldUseNString(dbConnection);
             prepStmt = dbConnection.prepareStatement(sqlStmt);
 
             Map<String, String> userAttributes = new HashMap<>();
@@ -3639,14 +3640,15 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                 String propertyValue = entry.getValue();
                 if (sqlStmt.contains(UserCoreConstants.UM_TENANT_COLUMN)) {
                     if (UserCoreConstants.OPENEDGE_TYPE.equals(type)) {
-                        batchUpdateStringValuesToDatabase(prepStmt, propertyName, propertyValue, profileName,
-                                tenantId, userName, tenantId);
+                        batchUpdateStringValuesToDatabase(useNString, prepStmt, propertyName, propertyValue,
+                                profileName, tenantId, userName, tenantId);
                     } else {
-                        batchUpdateStringValuesToDatabase(prepStmt, userName, tenantId, propertyName, propertyValue,
-                                profileName, tenantId);
+                        batchUpdateStringValuesToDatabase(useNString, prepStmt, userName, tenantId, propertyName,
+                                propertyValue, profileName, tenantId);
                     }
                 } else {
-                    batchUpdateStringValuesToDatabase(prepStmt, userName, propertyName, propertyValue, profileName);
+                    batchUpdateStringValuesToDatabase(useNString, prepStmt, userName, propertyName, propertyValue,
+                                profileName);
                 }
             }
 
@@ -3733,6 +3735,7 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                 localConnection = true;
                 dbConnection = getDBConnection();
             }
+            boolean useNString = shouldUseNString(dbConnection);
             prepStmt = dbConnection.prepareStatement(sqlStmt);
 
             for (Map.Entry<String, String> entry : properties.entrySet()) {
@@ -3740,14 +3743,15 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                 String propertyValue = entry.getValue();
                 if (sqlStmt.contains(UserCoreConstants.UM_TENANT_COLUMN)) {
                     if (UserCoreConstants.OPENEDGE_TYPE.equals(type)) {
-                        batchUpdateStringValuesToDatabase(prepStmt, propertyName, propertyValue, profileName,
-                                tenantId, userName, tenantId);
+                        batchUpdateStringValuesToDatabase(useNString, prepStmt, propertyName, propertyValue,
+                                profileName, tenantId, userName, tenantId);
                     } else {
-                        batchUpdateStringValuesToDatabase(prepStmt, propertyValue, userName, tenantId, propertyName,
-                                profileName, tenantId);
+                        batchUpdateStringValuesToDatabase(useNString, prepStmt, propertyValue, userName, tenantId,
+                                propertyName, profileName, tenantId);
                     }
                 } else {
-                    batchUpdateStringValuesToDatabase(prepStmt, propertyValue, userName, propertyName, profileName);
+                    batchUpdateStringValuesToDatabase(useNString, prepStmt, propertyValue, userName, propertyName,
+                            profileName);
                 }
             }
 
@@ -3791,8 +3795,9 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
      * @param params
      * @throws UserStoreException
      */
-    private void batchUpdateStringValuesToDatabase(PreparedStatement prepStmt, Object... params) throws
-            UserStoreException {
+    private void batchUpdateStringValuesToDatabase(boolean useNString, PreparedStatement prepStmt,
+                                                   Object... params) throws UserStoreException {
+
         try {
             if (params != null && params.length > 0) {
                 for (int i = 0; i < params.length; i++) {
@@ -3800,7 +3805,7 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                     if (param == null) {
                         throw new UserStoreException("Invalid data provided");
                     } else if (param instanceof String) {
-                        if (isStoreUserAttributeAsUnicode()) {
+                        if (useNString) {
                             prepStmt.setNString(i + 1, (String) param);
                         } else {
                             prepStmt.setString(i + 1, (String) param);
@@ -4071,7 +4076,7 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
             } else {
                 prepStmt.setString(1, userRealm.getClaimManager().getAttributeName(domainName, claimUri));
                 prepStmt.setInt(2, tenantId);
-                if (isStoreUserAttributeAsUnicode()) {
+                if (shouldUseNString(dbConnection)) {
                     prepStmt.setNString(3, valueFilter);
                 } else {
                     prepStmt.setString(3, valueFilter);
@@ -4287,7 +4292,7 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
             }
             prepStmt = dbConnection.prepareStatement(sqlStmt);
             prepStmt.setString(1, property);
-            if (isStoreUserAttributeAsUnicode()) {
+            if (shouldUseNString(dbConnection)) {
                 prepStmt.setNString(2, value);
             } else {
                 prepStmt.setString(2, value);
@@ -4405,7 +4410,7 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
                     int occurance = StringUtils.countMatches(query, QUERY_BINDING_SYMBOL);
                     endIndex = endIndex + occurance;
                     prepStmt = dbConnection.prepareStatement(query);
-                    populatePrepareStatement(sqlBuilder, prepStmt, startIndex, endIndex);
+                    populatePrepareStatement(dbConnection, sqlBuilder, prepStmt, startIndex, endIndex);
                     rs = prepStmt.executeQuery();
                     while (rs.next()) {
                         String name = rs.getString(1);
@@ -4422,7 +4427,7 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
             } else {
                 prepStmt = dbConnection.prepareStatement(sqlBuilder.getQuery());
                 int occurance = StringUtils.countMatches(sqlBuilder.getQuery(), "?");
-                populatePrepareStatement(sqlBuilder, prepStmt, 0, occurance);
+                populatePrepareStatement(dbConnection, sqlBuilder, prepStmt, 0, occurance);
                 rs = prepStmt.executeQuery();
                 while (rs.next()) {
                     String name = rs.getString(1);
@@ -4448,8 +4453,8 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
         return result;
     }
 
-    private void populatePrepareStatement(SqlBuilder sqlBuilder, PreparedStatement prepStmt, int startIndex,
-                                          int endIndex) throws SQLException {
+    private void populatePrepareStatement(Connection dbConnection, SqlBuilder sqlBuilder, PreparedStatement prepStmt,
+                                          int startIndex, int endIndex) throws SQLException {
 
         Map<Integer, Integer> integerParameters = sqlBuilder.getIntegerParameters();
         Map<Integer, String> stringParameters = sqlBuilder.getStringParameters();
@@ -4463,7 +4468,7 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
 
         for (Map.Entry<Integer, String> entry : stringParameters.entrySet()) {
             if (entry.getKey() > startIndex && entry.getKey() <= endIndex) {
-                if (isStoreUserAttributeAsUnicode()){
+                if (shouldUseNString(dbConnection)){
                     prepStmt.setNString(entry.getKey() - startIndex, entry.getValue());
                 } else {
                     prepStmt.setString(entry.getKey() - startIndex, entry.getValue());
@@ -4894,7 +4899,7 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
             sqlStmt = realmConfig.getUserStoreProperty(JDBCRealmConstants.GET_PAGINATED_USERS_COUNT_FOR_PROP);
             prepStmt = dbConnection.prepareStatement(sqlStmt);
             prepStmt.setString(1, property);
-            if (isStoreUserAttributeAsUnicode()) {
+            if (shouldUseNString(dbConnection)) {
                 prepStmt.setNString(2, value);
             } else {
                 prepStmt.setString(2, value);
@@ -5012,6 +5017,24 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
     private boolean isH2DB(Connection dbConnection) throws Exception {
 
         return H2.equalsIgnoreCase(DatabaseCreator.getDatabaseType(dbConnection));
+    }
+
+    /**
+     * Checks if N-string (Unicode) should be used for storing user attributes.
+     * Applicable only for MSSQL when Unicode storage is enabled.
+     *
+     * @param dbConnection the database connection
+     * @return {@code true} if N-string should be used; {@code false} otherwise
+     */
+    protected boolean shouldUseNString(Connection dbConnection) {
+
+        try {
+            return  isStoreUserAttributeAsUnicode()
+                    && MSSQL.equalsIgnoreCase(DatabaseCreator.getDatabaseType(dbConnection));
+        } catch (Exception e) {
+            log.warn("Error occurred while getting the database type.", e);
+            return false;
+        }
     }
 
     /**

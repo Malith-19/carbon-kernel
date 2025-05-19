@@ -965,7 +965,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
 
             prepStmt = dbConnection.prepareStatement(sqlstmt);
             prepStmt.setString(1, preferredUserNameProperty);
-            if (isStoreUserAttributeAsUnicode()) {
+            if (shouldUseNString(dbConnection)) {
                 prepStmt.setNString(2, preferredUserNameValue);
             } else {
                 prepStmt.setString(2, preferredUserNameValue);
@@ -2334,7 +2334,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                     if (param == null) {
                         throw new UserStoreException("Invalid data provided");
                     } else if (param instanceof String) {
-                        if (isStoreUserAttributeAsUnicode()) {
+                        if (shouldUseNString(dbConnection)) {
                             prepStmt.setNString(i + 1, (String) param);
                         } else {
                             prepStmt.setString(i + 1, (String) param);
@@ -2401,7 +2401,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                     if (param == null) {
                         throw new UserStoreException("Invalid data provided");
                     } else if (param instanceof String) {
-                        if (isStoreUserAttributeAsUnicode()) {
+                        if (shouldUseNString(dbConnection)) {
                             prepStmt.setNString(i + 1, (String) param);
                         } else {
                             prepStmt.setString(i + 1, (String) param);
@@ -2473,7 +2473,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                     } else if (param instanceof String[]) {
                         batchParamIndex = i;
                     } else if (param instanceof String) {
-                        if (isStoreUserAttributeAsUnicode()) {
+                        if (shouldUseNString(dbConnection)) {
                             prepStmt.setNString(i + 1, (String) param);
                         } else {
                             prepStmt.setString(i + 1, (String) param);
@@ -2727,7 +2727,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                 prepStmt.setInt(2, tenantId);
             } else {
                 prepStmt.setString(1, property);
-                if (isStoreUserAttributeAsUnicode()) {
+                if (shouldUseNString(dbConnection)) {
                     prepStmt.setNString(2, value);
                 } else {
                     prepStmt.setString(2, value);
@@ -3076,6 +3076,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                 localConnection = true;
                 dbConnection = getDBConnection();
             }
+            boolean useNString = shouldUseNString(dbConnection);
             prepStmt = dbConnection.prepareStatement(sqlStmt);
 
             Map<String, String> userAttributes = new HashMap<>();
@@ -3098,14 +3099,15 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                 for (String propertyValue : propertyValues) {
                     if (sqlStmt.contains(UserCoreConstants.UM_TENANT_COLUMN)) {
                         if (UserCoreConstants.OPENEDGE_TYPE.equals(type)) {
-                            batchUpdateStringValuesToDatabase(prepStmt, propertyName, propertyValue, profileName,
-                                    tenantId, userID, tenantId);
+                            batchUpdateStringValuesToDatabase(useNString, prepStmt, propertyName, propertyValue,
+                                    profileName, tenantId, userID, tenantId);
                         } else {
-                            batchUpdateStringValuesToDatabase(prepStmt, userID, tenantId, propertyName, propertyValue,
-                                    profileName, tenantId);
+                            batchUpdateStringValuesToDatabase(useNString, prepStmt, userID, tenantId, propertyName,
+                                    propertyValue, profileName, tenantId);
                         }
                     } else {
-                        batchUpdateStringValuesToDatabase(prepStmt, userID, propertyName, propertyValue, profileName);
+                        batchUpdateStringValuesToDatabase(useNString, prepStmt, userID, propertyName, propertyValue,
+                                profileName);
                     }
                 }
             }
@@ -3183,6 +3185,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                 localConnection = true;
                 dbConnection = getDBConnection();
             }
+            boolean useNString = shouldUseNString(dbConnection);
             prepStmt = dbConnection.prepareStatement(sqlStmt);
 
             for (Map.Entry<String, String> entry : properties.entrySet()) {
@@ -3190,14 +3193,15 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                 String propertyValue = entry.getValue();
                 if (sqlStmt.contains(UserCoreConstants.UM_TENANT_COLUMN)) {
                     if (UserCoreConstants.OPENEDGE_TYPE.equals(type)) {
-                        batchUpdateStringValuesToDatabase(prepStmt, propertyName, propertyValue, profileName, tenantId,
-                                userID, tenantId);
+                        batchUpdateStringValuesToDatabase(useNString, prepStmt, propertyName, propertyValue, profileName,
+                                tenantId, userID, tenantId);
                     } else {
-                        batchUpdateStringValuesToDatabase(prepStmt, propertyValue, propertyName, profileName, userID, tenantId,
-                                tenantId);
+                        batchUpdateStringValuesToDatabase(useNString, prepStmt, propertyValue, propertyName, profileName,
+                                userID, tenantId, tenantId);
                     }
                 } else {
-                    batchUpdateStringValuesToDatabase(prepStmt, propertyValue, userID, propertyName, profileName);
+                    batchUpdateStringValuesToDatabase(useNString, prepStmt, propertyValue, userID, propertyName,
+                            profileName);
                 }
             }
 
@@ -3240,7 +3244,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
         }
     }
 
-    private void batchUpdateStringValuesToDatabase(PreparedStatement prepStmt, Object... params)
+    private void batchUpdateStringValuesToDatabase(boolean useNString, PreparedStatement prepStmt, Object... params)
             throws UserStoreException {
 
         try {
@@ -3250,7 +3254,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                     if (param == null) {
                         throw new UserStoreException("Invalid data provided");
                     } else if (param instanceof String) {
-                        if (isStoreUserAttributeAsUnicode()) {
+                        if (useNString) {
                             prepStmt.setNString(i + 1, (String) param);
                         } else {
                             prepStmt.setString(i + 1, (String) param);
@@ -3574,7 +3578,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
             }
             prepStmt = dbConnection.prepareStatement(sqlStmt);
             prepStmt.setString(1, property);
-            if (isStoreUserAttributeAsUnicode()) {
+            if (shouldUseNString(dbConnection)) {
                 prepStmt.setNString(2, value);
             } else {
                 prepStmt.setString(2, value);
@@ -3647,7 +3651,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
             sqlStmt = realmConfig.getUserStoreProperty(JDBCRealmConstants.GET_PAGINATED_USERS_COUNT_FOR_PROP_WITH_ID);
             prepStmt = dbConnection.prepareStatement(sqlStmt);
             prepStmt.setString(1, property);
-            if (isStoreUserAttributeAsUnicode()) {
+            if (shouldUseNString(dbConnection)) {
                 prepStmt.setNString(2, value);
             } else {
                 prepStmt.setString(2, value);
@@ -3769,13 +3773,14 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
             throws SQLException, UserStoreException {
 
         List<User> users = new ArrayList<>();
+        boolean useNString = isStoreUserAttributeAsUnicode() && MSSQL.equalsIgnoreCase(type);
 
         if (needsMultiFilterHandling(type, filterConfigs)) {
-            users = handleMultipleGroupAndClaimFiltersForUsers(dbConnection, sqlBuilder);
+            users = handleMultipleGroupAndClaimFiltersForUsers(useNString, dbConnection, sqlBuilder);
         } else {
             try (PreparedStatement prepStmt = dbConnection.prepareStatement(sqlBuilder.getQuery())) {
                 int occurrence = StringUtils.countMatches(sqlBuilder.getQuery(), "?");
-                populatePrepareStatement(sqlBuilder, prepStmt, 0, occurrence);
+                populatePrepareStatement(useNString, sqlBuilder, prepStmt, 0, occurrence);
                 try (ResultSet rs = prepStmt.executeQuery()) {
                     while (rs.next()) {
                         processUserResultSet(rs, users);
@@ -3792,13 +3797,14 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
             throws SQLException {
 
         List<String> usernames = new ArrayList<>();
+        boolean useNString = isStoreUserAttributeAsUnicode() && MSSQL.equalsIgnoreCase(type);
 
         if (needsMultiFilterHandling(type, filterConfigs)) {
-            usernames = handleMultipleGroupAndClaimFiltersForUsernames(dbConnection, sqlBuilder);
+            usernames = handleMultipleGroupAndClaimFiltersForUsernames(useNString, dbConnection, sqlBuilder);
         } else {
             try (PreparedStatement prepStmt = dbConnection.prepareStatement(sqlBuilder.getQuery())) {
                 int occurrence = StringUtils.countMatches(sqlBuilder.getQuery(), "?");
-                populatePrepareStatement(sqlBuilder, prepStmt, 0, occurrence);
+                populatePrepareStatement(useNString, sqlBuilder, prepStmt, 0, occurrence);
                 try (ResultSet rs = prepStmt.executeQuery()) {
                     while (rs.next()) {
                         processUsernameResultSet(rs, usernames);
@@ -3859,7 +3865,8 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
                 filterConfigs.getTotalMultiClaimFilters() > 1;
     }
 
-    private List<User> handleMultipleGroupAndClaimFiltersForUsers(Connection dbConnection, SqlBuilder sqlBuilder)
+    private List<User> handleMultipleGroupAndClaimFiltersForUsers(boolean useNString, Connection dbConnection,
+                                                                  SqlBuilder sqlBuilder)
             throws SQLException, UserStoreException {
 
         List<User> finalUsers = new ArrayList<>();
@@ -3873,7 +3880,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
             endIndex += occurrence;
 
             try (PreparedStatement prepStmt = dbConnection.prepareStatement(query)) {
-                populatePrepareStatement(sqlBuilder, prepStmt, startIndex, endIndex);
+                populatePrepareStatement(useNString, sqlBuilder, prepStmt, startIndex, endIndex);
                 try (ResultSet rs = prepStmt.executeQuery()) {
                     while (rs.next()) {
                         processUserResultSet(rs, tempList);
@@ -3893,7 +3900,8 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
         return finalUsers;
     }
 
-    private List<String> handleMultipleGroupAndClaimFiltersForUsernames(Connection dbConnection, SqlBuilder sqlBuilder)
+    private List<String> handleMultipleGroupAndClaimFiltersForUsernames(boolean useNString, Connection dbConnection,
+                                                                        SqlBuilder sqlBuilder)
             throws SQLException {
 
         List<String> finalUsernames = new ArrayList<>();
@@ -3907,7 +3915,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
             endIndex += occurrence;
 
             try (PreparedStatement prepStmt = dbConnection.prepareStatement(query)) {
-                populatePrepareStatement(sqlBuilder, prepStmt, startIndex, endIndex);
+                populatePrepareStatement(useNString, sqlBuilder, prepStmt, startIndex, endIndex);
                 try (ResultSet rs = prepStmt.executeQuery()) {
                     while (rs.next()) {
                         processUsernameResultSet(rs, tempList);
@@ -4509,8 +4517,8 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
         doDeleteRole(UserCoreUtil.removeDomainFromName(groupName));
     }
 
-    private void populatePrepareStatement(SqlBuilder sqlBuilder, PreparedStatement prepStmt, int startIndex,
-            int endIndex) throws SQLException {
+    private void populatePrepareStatement(boolean useNString, SqlBuilder sqlBuilder, PreparedStatement prepStmt,
+                                          int startIndex, int endIndex) throws SQLException {
 
         Map<Integer, Integer> integerParameters = sqlBuilder.getIntegerParameters();
         Map<Integer, String> stringParameters = sqlBuilder.getStringParameters();
@@ -4524,7 +4532,7 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
 
         for (Map.Entry<Integer, String> entry : stringParameters.entrySet()) {
             if (entry.getKey() > startIndex && entry.getKey() <= endIndex) {
-                if (isStoreUserAttributeAsUnicode()) {
+                if (useNString) {
                     prepStmt.setNString(entry.getKey() - startIndex, entry.getValue());
                 } else {
                     prepStmt.setString(entry.getKey() - startIndex, entry.getValue());

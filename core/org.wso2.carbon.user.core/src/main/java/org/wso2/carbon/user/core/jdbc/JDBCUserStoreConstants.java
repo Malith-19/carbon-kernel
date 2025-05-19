@@ -305,7 +305,7 @@ public class JDBCUserStoreConstants {
                 "Name of the class that implements the count functionality",
                 new Property[] { CONNECTION.getProperty(), STRING.getProperty(), FALSE.getProperty() });
 
-        setAdvancedProperty(STORE_USER_ATTRIBUTE_VALUE_AS_UNICODE, "Store User Attribute Value As Unicode", "false",
+        setAdvancedProperty(STORE_USER_ATTRIBUTE_VALUE_AS_UNICODE, "Store User Attribute Value As Unicode", "true",
                 "Store user attribute value as unicode",
                 new Property[] { CONNECTION.getProperty(), BOOLEAN.getProperty(), FALSE.getProperty() });
 
