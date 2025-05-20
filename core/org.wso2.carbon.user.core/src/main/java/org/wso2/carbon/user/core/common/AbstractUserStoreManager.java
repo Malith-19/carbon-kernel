@@ -4638,6 +4638,11 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
         //If user store is readonly this method should not get invoked with non empty claim set.
 
         if (isReadOnly() && !claims.isEmpty()) {
+            if (log.isDebugEnabled()) {
+                log.debug(String.format(
+                        "Attempt to update claims for user '%s' in a read-only user store. Claims: %s, Profile: %s",
+                        userID, claims.keySet(), profileName));
+            }
             handleSetUserClaimValuesFailure(ErrorMessages.ERROR_CODE_READONLY_USER_STORE.getCode(),
                     ErrorMessages.ERROR_CODE_READONLY_USER_STORE.getMessage(), userName, claims, profileName);
             throw new UserStoreException(ErrorMessages.ERROR_CODE_READONLY_USER_STORE.getMessage(),
@@ -14493,6 +14498,11 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
         //If user store is readonly this method should not get invoked with non empty claim set.
 
         if (isReadOnly() && !claims.isEmpty()) {
+            if (log.isDebugEnabled()) {
+                log.debug(String.format(
+                        "Attempt to update claims for user '%s' in a read-only user store. Claims: %s, Profile: %s",
+                        userID, claims.keySet(), profileName));
+            }
             handleSetUserClaimValuesFailureWithID(ErrorMessages.ERROR_CODE_READONLY_USER_STORE.getCode(),
                     ErrorMessages.ERROR_CODE_READONLY_USER_STORE.getMessage(), userID, claims, profileName);
             throw new UserStoreException(ErrorMessages.ERROR_CODE_READONLY_USER_STORE.getMessage(),
@@ -14586,6 +14596,11 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
 
         // If userstore is readonly this method should not get invoked with non empty claim set.
         if (isReadOnly() && !claims.isEmpty()) {
+            if (log.isDebugEnabled()) {
+                log.debug(String.format(
+                        "Attempt to update claims for user '%s' in a read-only user store. Claims: %s, Profile: %s",
+                        userID, claims.keySet(), profileName));
+            }
             handleSetUserClaimValuesFailureWithID(ErrorMessages.ERROR_CODE_READONLY_USER_STORE.getCode(),
                     ErrorMessages.ERROR_CODE_READONLY_USER_STORE.getMessage(), userID, claims, profileName);
             throw new UserStoreException(ErrorMessages.ERROR_CODE_READONLY_USER_STORE.toString());
