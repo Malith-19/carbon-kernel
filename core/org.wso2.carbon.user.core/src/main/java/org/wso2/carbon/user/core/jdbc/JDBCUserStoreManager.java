@@ -5029,7 +5029,7 @@ public class JDBCUserStoreManager extends AbstractUserStoreManager {
     protected boolean shouldUseNString(Connection dbConnection) {
 
         try {
-            return  isStoreUserAttributeAsUnicode()
+            return isStoreUserAttributeAsUnicode()
                     && MSSQL.equalsIgnoreCase(DatabaseCreator.getDatabaseType(dbConnection));
         } catch (Exception e) {
             log.warn("Error occurred while getting the database type.", e);
