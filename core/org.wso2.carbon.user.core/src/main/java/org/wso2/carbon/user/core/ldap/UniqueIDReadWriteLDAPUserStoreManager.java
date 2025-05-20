@@ -1024,6 +1024,12 @@ public class UniqueIDReadWriteLDAPUserStoreManager extends UniqueIDReadOnlyLDAPU
         String userSearchFilter = realmConfig.getUserStoreProperty(LDAPConstants.USER_ID_SEARCH_FILTER);
         String userIDAttribute = realmConfig.getUserStoreProperty(USER_ID_ATTRIBUTE);
 
+        if (log.isDebugEnabled()) {
+            log.debug(String.format(
+                    "Starting attribute update. userSearchBase: %s, userSearchFilter: %s, userIDAttribute: %s",
+                    userSearchBase, userSearchFilter, userIDAttribute));
+        }
+
         userSearchFilter = userSearchFilter.replaceAll(LDAPConstants.UID_EXACT_MATCH, userIDAttribute);
 
         if (OBJECT_GUID.equalsIgnoreCase(userIDAttribute) && isBinaryUserAttribute(userIDAttribute)) {
@@ -1129,6 +1135,12 @@ public class UniqueIDReadWriteLDAPUserStoreManager extends UniqueIDReadOnlyLDAPU
         String userSearchBase = realmConfig.getUserStoreProperty(LDAPConstants.USER_SEARCH_BASE);
         String userSearchFilter = realmConfig.getUserStoreProperty(LDAPConstants.USER_ID_SEARCH_FILTER);
         String userIDAttribute = realmConfig.getUserStoreProperty(USER_ID_ATTRIBUTE);
+
+        if (log.isDebugEnabled()) {
+            log.debug(String.format(
+                    "Starting attribute update. userSearchBase: %s, userSearchFilter: %s, userIDAttribute: %s",
+                    userSearchBase, userSearchFilter, userIDAttribute));
+        }
 
         userSearchFilter = userSearchFilter.replaceAll(LDAPConstants.UID_EXACT_MATCH, userIDAttribute);
 
@@ -1243,6 +1255,12 @@ public class UniqueIDReadWriteLDAPUserStoreManager extends UniqueIDReadOnlyLDAPU
         String userSearchBase = realmConfig.getUserStoreProperty(LDAPConstants.USER_SEARCH_BASE);
         String userSearchFilter = realmConfig.getUserStoreProperty(LDAPConstants.USER_ID_SEARCH_FILTER);
         String userIDAttribute = realmConfig.getUserStoreProperty(USER_ID_ATTRIBUTE);
+
+        if (log.isDebugEnabled()) {
+            log.debug(String.format(
+                    "Starting attribute update. userSearchBase: %s, userSearchFilter: %s, userIDAttribute: %s",
+                    userSearchBase, userSearchFilter, userIDAttribute));
+        }
 
         userSearchFilter = userSearchFilter.replaceAll(LDAPConstants.UID_EXACT_MATCH, userIDAttribute);
         userSearchFilter = userSearchFilter.replace("?", escapeSpecialCharactersForFilter(userID));
