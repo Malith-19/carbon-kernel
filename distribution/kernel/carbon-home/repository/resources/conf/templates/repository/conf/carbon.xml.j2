@@ -857,10 +857,10 @@
     {% endif %}
 
     <!-- Configure JSSE provider -->
-    {% if outbound_tls_provider.provider_name is defined %}
+    {% if transport.https.client.provider_name is defined %}
         <JSSEProvider>
-            <ProviderName>{{outbound_tls_provider.provider_name}}</ProviderName>
-            <NamedGroups>{{outbound_tls_provider.named_groups}}</NamedGroups>
+            <ProviderName>{{transport.https.client.provider_name}}</ProviderName>
+            <NamedGroups>{{transport.https.client.tls_named_groups}}</NamedGroups>
         </JSSEProvider>
     {% endif %}
 
