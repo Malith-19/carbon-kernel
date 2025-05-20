@@ -39,7 +39,15 @@ public class HTTPClientUtils {
      * Get the httpclient builder with custom hostname verifier.
      *
      * @return HttpClientBuilder.
+     *
+     * @deprecated
+     * This method is deprecated as part of an effort to unify all HTTP client implementations
+     * in the product.
+     *
+     * Use {@link org.wso2.carbon.utils.httpclient5.HTTPClientUtils#createClientWithCustomHostnameVerifier}
+     * instead.
      */
+    @Deprecated
     public static HttpClientBuilder createClientWithCustomVerifier() {
 
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create().useSystemProperties();
