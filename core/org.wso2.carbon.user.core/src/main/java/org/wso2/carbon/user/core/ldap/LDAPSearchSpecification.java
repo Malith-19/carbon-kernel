@@ -88,10 +88,14 @@ public class LDAPSearchSpecification {
         this.searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
         for (ExpressionCondition expressionCondition : expressionConditions) {
-            if (ExpressionAttribute.ROLE.toString().equals(expressionCondition.getAttributeName())
-                    && isGroupFiltering) {
-                isMultiGroupFiltering = true;
-            } else if (ExpressionAttribute.ROLE.toString().equals(expressionCondition.getAttributeName())) {
+            if (ExpressionAttribute.ROLE.toString().equals(expressionCondition.getAttributeName())) {
+                if (ExpressionOperation.NE.toString().equals(expressionCondition.getOperation())) {
+                    throw new UserStoreClientException(
+                            "ne operation is not supported for group-based user listing in LDAP userstores.");
+                }
+                if (isGroupFiltering) {
+                    isMultiGroupFiltering = true;
+                }
                 isGroupFiltering = true;
             } else if (ExpressionAttribute.USERNAME.toString().equals(expressionCondition.getAttributeName())) {
                 isUsernameFiltering = true;
