@@ -856,14 +856,6 @@
         <JCEProvider>{{jce_provider.provider_name}}</JCEProvider>
     {% endif %}
 
-    <!-- Configure JSSE provider -->
-    {% if transport.https.client.provider_name is defined %}
-        <JSSEProvider>
-            <ProviderName>{{transport.https.client.provider_name}}</ProviderName>
-            <NamedGroups>{{transport.https.client.tls_named_groups}}</NamedGroups>
-        </JSSEProvider>
-    {% endif %}
-
     <!-- Configure SignatureUtil algorithms -->
     <SignatureUtil>
         <EnableSHA256Algo>{{signature_util.enable_sha256_algo}}</EnableSHA256Algo>
