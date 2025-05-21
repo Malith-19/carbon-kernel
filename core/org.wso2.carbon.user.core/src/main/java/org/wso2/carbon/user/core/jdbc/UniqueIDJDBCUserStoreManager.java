@@ -4550,86 +4550,94 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
         boolean hitGroupFilter = false;
         boolean hitClaimFilter = false;
         List<SqlBuilder> mysqlSubSqlBuilders = new ArrayList<>();
+        boolean isGroupFilteringWithNEOperator = isGroupFilteringWithNotEqualOperator(isGroupFiltering, expressionConditions);
+        String groupUserJoin =  isGroupFilteringWithNEOperator ? " RIGHT JOIN " : " INNER JOIN ";
 
         if (isGroupFiltering && isUsernameFiltering && isClaimFiltering || isGroupFiltering && isClaimFiltering) {
 
             if (DB2.equals(dbType)) {
                 sqlStatement = new StringBuilder("SELECT U.UM_USER_ID, U.UM_USER_NAME FROM (SELECT "
                         + "ROW_NUMBER() OVER (ORDER BY UM_USER_NAME) AS rn, p.*  FROM (SELECT DISTINCT UM_USER_NAME  "
-                        + "FROM UM_ROLE R INNER JOIN UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID INNER JOIN UM_USER U "
+                        + "FROM UM_ROLE R INNER JOIN UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID"
+                        + groupUserJoin + "UM_USER U "
                         + "ON UR.UM_USER_ID =U.UM_ID INNER JOIN UM_USER_ATTRIBUTE UA ON U.UM_ID = UA.UM_USER_ID");
             } else if (H2.equals(dbType)) {
                 sqlStatement = new StringBuilder(
                         "SELECT DISTINCT U.UM_USER_ID, U.UM_USER_NAME FROM UM_ROLE R INNER JOIN " +
-                                "UM_USER_ROLE UR ON R.UM_ID =  UR.UM_ROLE_ID INNER JOIN " +
+                                "UM_USER_ROLE UR ON R.UM_ID =  UR.UM_ROLE_ID" + groupUserJoin +
                                 "UM_USER U ON UR.UM_USER_ID = U.UM_ID INNER JOIN " +
                                 "UM_USER_ATTRIBUTE UA ON  U.UM_ID = UA.UM_USER_ID");
             } else if (MSSQL.equals(dbType)) {
                 sqlStatement = new StringBuilder(
                         "SELECT UM_USER_ID, UM_USER_NAME FROM (SELECT UM_USER_ID, UM_USER_NAME, ROW_NUMBER() OVER "
                                 + "(ORDER BY UM_USER_NAME) AS RowNum FROM (SELECT DISTINCT U.UM_USER_ID, " +
-                                "UM_USER_NAME FROM UM_ROLE R INNER JOIN UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID " +
-                                "INNER JOIN UM_USER U ON UR.UM_USER_ID =U.UM_ID INNER JOIN UM_USER_ATTRIBUTE UA ON" +
-                                " U.UM_ID = UA.UM_USER_ID");
+                                "UM_USER_NAME FROM UM_ROLE R INNER JOIN UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID" +
+                                groupUserJoin + "UM_USER U ON UR.UM_USER_ID =U.UM_ID INNER JOIN UM_USER_ATTRIBUTE UA " +
+                                "ON U.UM_ID = UA.UM_USER_ID");
             } else if (ORACLE.equals(dbType)) {
                 sqlStatement = new StringBuilder(
                         "SELECT UM_USER_ID, UM_USER_NAME FROM (SELECT UM_USER_ID, UM_USER_NAME, rownum AS rnum "
                                 + "FROM (SELECT U.UM_USER_ID, U.UM_USER_NAME FROM UM_ROLE R INNER JOIN UM_USER_ROLE UR "
-                                + "ON R.UM_ID = UR.UM_ROLE_ID INNER JOIN UM_USER U ON UR.UM_USER_ID =U.UM_ID INNER "
-                                + "JOIN UM_USER_ATTRIBUTE UA ON U.UM_ID = UA.UM_USER_ID");
+                                + "ON R.UM_ID = UR.UM_ROLE_ID" + groupUserJoin + "UM_USER U ON UR.UM_USER_ID =U.UM_ID "
+                                + "INNER JOIN UM_USER_ATTRIBUTE UA ON U.UM_ID = UA.UM_USER_ID");
             } else if (POSTGRE_SQL.equals(dbType)) {
                 sqlStatement = new StringBuilder(
                         "SELECT DISTINCT U.UM_USER_ID, U.UM_USER_NAME FROM UM_ROLE R INNER JOIN " +
-                                "UM_USER_ROLE UR ON R.UM_ID =  UR.UM_ROLE_ID INNER JOIN" +
-                                " UM_USER U ON UR.UM_USER_ID =U.UM_ID INNER JOIN " +
+                                "UM_USER_ROLE UR ON R.UM_ID =  UR.UM_ROLE_ID" + groupUserJoin +
+                                "UM_USER U ON UR.UM_USER_ID =U.UM_ID INNER JOIN " +
                                 "UM_USER_ATTRIBUTE UA ON  U.UM_ID = UA.UM_USER_ID");
             } else {
                 sqlStatement = new StringBuilder(
                         "SELECT DISTINCT U.UM_USER_ID, U.UM_USER_NAME FROM UM_ROLE R INNER JOIN "
-                                + "UM_USER_ROLE UR INNER JOIN UM_USER U INNER JOIN UM_USER_ATTRIBUTE UA ON R.UM_ID = "
-                                + "UR.UM_ROLE_ID AND UR.UM_USER_ID =" + " U.UM_ID AND U.UM_ID = UA.UM_USER_ID");
+                                + "UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID"
+                                + groupUserJoin + "UM_USER U ON UR.UM_USER_ID = U.UM_ID "
+                                + "INNER JOIN UM_USER_ATTRIBUTE UA ON U.UM_ID = UA.UM_USER_ID");
             }
-            sqlBuilder = new SqlBuilder(sqlStatement).where("R.UM_TENANT_ID = ?", tenantId)
-                    .where("U.UM_TENANT_ID = ?", tenantId).where("UR.UM_TENANT_ID = ?", tenantId)
+            sqlBuilder = new SqlBuilder(sqlStatement).where("U.UM_TENANT_ID = ?", tenantId)
                     .where("UA.UM_TENANT_ID = ?", tenantId).where("UA.UM_PROFILE_ID = ?", profileName);
+            if (!isGroupFilteringWithNEOperator) {
+                sqlBuilder.where("R.UM_TENANT_ID = ?", tenantId).where("UR.UM_TENANT_ID = ?", tenantId);
+            }
         } else if (isGroupFiltering && isUsernameFiltering || isGroupFiltering) {
             if (DB2.equals(dbType)) {
                 sqlStatement = new StringBuilder(
                         "SELECT U.UM_USER_ID, U.UM_USER_NAME FROM (SELECT ROW_NUMBER() OVER (ORDER BY "
                                 + "UM_USER_NAME) AS rn, p.*  FROM (SELECT DISTINCT UM_USER_NAME  FROM UM_ROLE R INNER"
-                                + " JOIN UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID INNER JOIN UM_USER U ON UR"
+                                + " JOIN UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID" + groupUserJoin + "UM_USER U ON UR"
                                 + ".UM_USER_ID "
                                 + "=U.UM_ID ");
             } else if (H2.equals(dbType)) {
                 sqlStatement = new StringBuilder(
                         "SELECT DISTINCT U.UM_USER_ID, U.UM_USER_NAME FROM UM_ROLE R INNER JOIN " +
-                                "UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID INNER JOIN " +
+                                "UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID" + groupUserJoin +
                                 "UM_USER U ON UR.UM_USER_ID = U.UM_ID");
             } else if (MSSQL.equals(dbType)) {
                 sqlStatement = new StringBuilder(
                         "SELECT UM_USER_ID, UM_USER_NAME FROM (SELECT UM_USER_ID, UM_USER_NAME, ROW_NUMBER() OVER "
                                 + "(ORDER BY UM_USER_NAME) AS RowNum FROM (SELECT DISTINCT U.UM_USER_ID, " +
-                                "UM_USER_NAME FROM UM_ROLE R INNER JOIN UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID " +
-                                "INNER JOIN UM_USER U ON UR.UM_USER_ID =U.UM_ID");
+                                "UM_USER_NAME FROM UM_ROLE R INNER JOIN UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID" +
+                                groupUserJoin + "UM_USER U ON UR.UM_USER_ID =U.UM_ID");
             } else if (ORACLE.equals(dbType)) {
                 sqlStatement = new StringBuilder(
                         "SELECT UM_USER_ID, UM_USER_NAME FROM (SELECT UM_USER_ID, UM_USER_NAME, rownum AS rnum "
                                 + "FROM (SELECT U.UM_USER_ID, U.UM_USER_NAME FROM UM_ROLE R INNER JOIN UM_USER_ROLE UR "
-                                + "ON R.UM_ID = UR.UM_ROLE_ID INNER JOIN UM_USER U ON UR.UM_USER_ID =U.UM_ID");
+                                + "ON R.UM_ID = UR.UM_ROLE_ID" + groupUserJoin + "UM_USER U ON UR.UM_USER_ID =U.UM_ID");
             } else if (POSTGRE_SQL.equals(dbType)) {
                 sqlStatement = new StringBuilder(
                         "SELECT DISTINCT U.UM_USER_ID, U.UM_USER_NAME FROM UM_ROLE R INNER JOIN " +
-                                "UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID INNER JOIN " +
+                                "UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID" + groupUserJoin +
                                 "UM_USER U ON UR.UM_USER_ID=U.UM_ID");
             } else {
                 sqlStatement = new StringBuilder(
                         "SELECT DISTINCT U.UM_USER_ID, U.UM_USER_NAME FROM UM_ROLE R INNER JOIN "
-                                + "UM_USER_ROLE UR INNER JOIN UM_USER U ON R.UM_ID = UR.UM_ROLE_ID AND UR.UM_USER_ID "
-                                + "=U.UM_ID");
+                                + "UM_USER_ROLE UR ON R.UM_ID = UR.UM_ROLE_ID"
+                                + groupUserJoin + "UM_USER U ON UR.UM_USER_ID = U.UM_ID");
             }
 
-            sqlBuilder = new SqlBuilder(sqlStatement).where("R.UM_TENANT_ID = ?", tenantId)
-                    .where("U.UM_TENANT_ID = ?", tenantId).where("UR.UM_TENANT_ID = ?", tenantId);
+            sqlBuilder = new SqlBuilder(sqlStatement).where("U.UM_TENANT_ID = ?", tenantId);
+            if (!isGroupFilteringWithNEOperator) {
+                sqlBuilder.where("R.UM_TENANT_ID = ?", tenantId).where("UR.UM_TENANT_ID = ?", tenantId);
+            }
         } else if (isUsernameFiltering && isClaimFiltering || isClaimFiltering) {
             if (DB2.equals(dbType)) {
                 sqlStatement = new StringBuilder(
@@ -4821,6 +4829,8 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
             sqlBuilder.where("R.UM_ROLE_NAME LIKE ?", "%" + value + "%");
         } else if (ExpressionOperation.SW.toString().equals(operation)) {
             sqlBuilder.where("R.UM_ROLE_NAME LIKE ?", value + "%");
+        } else if (ExpressionOperation.NE.toString().equals(operation)) {
+            sqlBuilder.where("(R.UM_ROLE_NAME IS NULL OR R.UM_ROLE_NAME <> ?)", value);
         }
     }
 
@@ -5251,5 +5261,26 @@ public class UniqueIDJDBCUserStoreManager extends JDBCUserStoreManager {
         combined.appendParameterizedSqlFragment("", orderedParams);
 
         return combined;
+    }
+
+    /**
+     * Determines whether group filtering involves at least one 'Not Equal (ne)' operation.
+     *
+     * @param isGroupFiltering     Indicates whether the filtering includes group-based conditions.
+     * @param expressionConditions The list of SCIM filter expression conditions to evaluate.
+     * @return true if there is a group filter condition using the 'ne' operator; false otherwise.
+     */
+    private boolean isGroupFilteringWithNotEqualOperator(boolean isGroupFiltering,
+                                                         List<ExpressionCondition> expressionConditions) {
+        if (!isGroupFiltering) {
+            return false;
+        }
+        for (ExpressionCondition cond : expressionConditions) {
+            if (ExpressionAttribute.ROLE.toString().equals(cond.getAttributeName()) &&
+                    ExpressionOperation.NE.toString().equals(cond.getOperation())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
