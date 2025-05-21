@@ -1401,7 +1401,7 @@ public class CarbonUtils {
         Object auditLogObject = auditLogData.get(CarbonConstants.LogEventConstants.AUDIT_LOG);
         if (auditLogObject instanceof AuditLog) {
             AuditLog auditLog = (AuditLog) auditLogObject;
-            audit.warn(gson.toJson(auditLog));
+            audit.info(gson.toJson(auditLog));
         }
     }
 
