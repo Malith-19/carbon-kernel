@@ -814,7 +814,7 @@ public class JDBCTenantManager implements TenantManager {
                 tenant.setTenantUniqueID(uniqueId);
                 tenant.setId(id);
                 tenant.setDomain(domain);
-                tenant.setName(name);
+                tenant.setName(name != null ? name : domain);
                 tenant.setEmail(email);
                 tenant.setCreatedDate(createdDate);
                 tenant.setActive(active);
