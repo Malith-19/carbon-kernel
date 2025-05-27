@@ -20,6 +20,7 @@ package org.wso2.carbon.user.core.model;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -207,4 +208,57 @@ public class SqlBuilder {
         return sqlQueryStringBuilder.toString();
     }
 
+    /**
+     * Retrieves all parameters currently stored in this SqlBuilder instance, ordered by their original 1-based index.
+     *
+     * @return A List of Objects representing the parameters in order.
+     */
+    public List<Object> getOrderedParameters() {
+
+        int totalParametersCount = this.count - 1;
+        if (totalParametersCount <= 0) {
+            return new ArrayList<>();
+        }
+
+        Object[] parametersArray = new Object[totalParametersCount];
+
+        // Populate the array using the 1-based indices from the maps.
+        integerParameters.forEach((idx, val) -> parametersArray[idx - 1] = val);
+        stringParameters.forEach((idx, val) -> parametersArray[idx - 1] = val);
+        longParameters.forEach((idx, val) -> parametersArray[idx - 1] = val);
+
+        return new ArrayList<>(Arrays.asList(parametersArray));
+    }
+
+    /**
+     * Appends a raw SQL string fragment (which may contain '?' placeholders) directly to this SqlBuilder instance's
+     * current SQL string. It then registers the provided parameters in sequence, incrementing the main parameter count.
+     *
+     * @param fragment          The SQL fragment string to append.
+     * @param paramsForFragment A List of Objects(String, Integer, Long) representing the parameters for the fragment,
+     *                          in order.
+     */
+    public void appendParameterizedSqlFragment(String fragment, List<Object> paramsForFragment) {
+
+        // Append pending WHERE clauses into the SQL string before appending the fragment.
+        appendList(this.sql, this.wheres);
+        this.wheres = new ArrayList<>();
+
+        // Append the raw SQL fragment (should include leading space or keyword as needed).
+        this.sql.append(fragment);
+
+        // Register the parameters.
+        if (paramsForFragment != null) {
+            for (Object param : paramsForFragment) {
+                if (param instanceof String) {
+                    stringParameters.put(count, (String) param);
+                } else if (param instanceof Integer) {
+                    integerParameters.put(count, (Integer) param);
+                } else if (param instanceof Long) {
+                    longParameters.put(count, (Long) param);
+                }
+                count++;
+            }
+        }
+    }
 }
