@@ -11428,9 +11428,9 @@ public abstract class AbstractUserStoreManager implements PaginatedUserStoreMana
 
     private boolean isAnInternalRole(String roleName) {
 
-        return roleName.toLowerCase().startsWith(APPLICATION_DOMAIN.toLowerCase()) || roleName.toLowerCase()
-                .startsWith(UserCoreConstants.INTERNAL_DOMAIN.toLowerCase()) || roleName.toLowerCase()
-                .startsWith(WORKFLOW_DOMAIN.toLowerCase());
+        return roleName.toLowerCase().startsWith(APPLICATION_DOMAIN.toLowerCase() + DOMAIN_SEPARATOR)
+                || roleName.toLowerCase().startsWith(UserCoreConstants.INTERNAL_DOMAIN.toLowerCase() + DOMAIN_SEPARATOR)
+                || roleName.toLowerCase().startsWith(WORKFLOW_DOMAIN.toLowerCase() + DOMAIN_SEPARATOR);
     }
 
     private List<String> getUserStorePreferenceOrder() throws UserStoreException {
