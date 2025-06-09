@@ -91,6 +91,7 @@
   "user_store.group_id_attribute": "user_store.properties.GroupIdAttribute",
   "user_store.group_modified_timestamp_attribute": "user_store.properties.GroupLastModifiedDateAttribute",
   "user_store.group_created_timestamp_attribute": "user_store.properties.GroupCreatedDateAttribute",
+  "user_store.hash_algorithm_properties": "user_store.properties.'Hash.Algorithm.Properties'",
 
   "transport.https.properties.certificate_verification": "transport.https.sslHostConfig.properties.certificateVerification",
   "transport.https.properties.protocols": "transport.https.sslHostConfig.properties.protocols",
