@@ -858,10 +858,7 @@
 
     <!-- Configure JSSE provider -->
     {% if transport.https.client.provider_name is defined %}
-        <JSSEProvider>
-            <ProviderName>{{transport.https.client.provider_name}}</ProviderName>
-            <NamedGroups>{{transport.https.client.tls_named_groups}}</NamedGroups>
-        </JSSEProvider>
+        <JSSEProvider>{{transport.https.client.provider_name}}</JSSEProvider>
     {% endif %}
 
     <!-- Configure SignatureUtil algorithms -->
