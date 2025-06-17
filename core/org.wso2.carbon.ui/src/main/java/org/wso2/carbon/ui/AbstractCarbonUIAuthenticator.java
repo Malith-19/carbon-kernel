@@ -54,6 +54,8 @@ import org.wso2.carbon.utils.ServerConstants;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
+import static org.wso2.carbon.utils.CarbonUtils.isEnableV2AuditLogs;
+
 /**
  * An abstract implementation if CarbonUIAuthenticator.
  */
@@ -286,7 +288,7 @@ public abstract class AbstractCarbonUIAuthenticator implements CarbonUIAuthentic
             if (request.getAttribute(MultitenantConstants.TENANT_DOMAIN) == null) {
                 request.setAttribute(MultitenantConstants.TENANT_DOMAIN, tenantDomain);
             }
-        } else {
+        } else if (!isEnableV2AuditLogs()) {
             audit.info("User with null domain tried to login.");
             return;
         }
@@ -321,7 +323,7 @@ public abstract class AbstractCarbonUIAuthenticator implements CarbonUIAuthentic
             if (request.getAttribute(MultitenantConstants.TENANT_DOMAIN) == null) {
                 request.setAttribute(MultitenantConstants.TENANT_DOMAIN, tenantDomain);
             }
-        } else {
+        } else if (!isEnableV2AuditLogs()) {
             audit.info("User with null domain tried to login.");
             return;
         }

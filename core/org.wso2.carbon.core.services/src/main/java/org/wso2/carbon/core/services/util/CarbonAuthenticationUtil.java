@@ -40,7 +40,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
-import static org.wso2.carbon.utils.CarbonUtils.isLegacyAuditLogsDisabled;
+import static org.wso2.carbon.utils.CarbonUtils.isEnableV2AuditLogs;
 
 public class CarbonAuthenticationUtil {
 
@@ -76,7 +76,7 @@ public class CarbonAuthenticationUtil {
            msg +=  " from IP address " + remoteAddress;
         }
         log.warn(msg);
-        if (!isLegacyAuditLogsDisabled()) {
+        if (!isEnableV2AuditLogs()) {
             audit.warn(msg);
         }
         if (httpSess != null) {
@@ -102,7 +102,7 @@ public class CarbonAuthenticationUtil {
             msg +=  " from IP address " + remoteAddress;
         }
         log.info(msg);
-        if (!isLegacyAuditLogsDisabled()) {
+        if (!isEnableV2AuditLogs()) {
             audit.info(msg);
         }
         // trigger the callbacks subscribe to the login event
@@ -162,7 +162,7 @@ public class CarbonAuthenticationUtil {
                     httpSession.setAttribute(MultitenantConstants.IS_SUPER_TENANT, "true");
                 }
             } else {
-                if (!isLegacyAuditLogsDisabled()) {
+                if (!isEnableV2AuditLogs()) {
                     audit.info("User with null domain tried to login.");
                 }
                 return;
@@ -210,7 +210,7 @@ public class CarbonAuthenticationUtil {
             if (tenantDomain != null) {
                 thriftSession.setAttribute(MultitenantConstants.TENANT_DOMAIN, tenantDomain);
             } else {
-                if (!isLegacyAuditLogsDisabled()) {
+                if (!isEnableV2AuditLogs()) {
                     audit.info("User with null domain tried to login.");
                 }
             	return;
@@ -239,7 +239,7 @@ public class CarbonAuthenticationUtil {
         String msg = "\'" + username + "@" + tenantDomain + " [" + tenantId + "]\' logged in at " +
                    date.format(currentTime) + " from IP address " + remoteAddress;
         log.info(msg);
-        if (!isLegacyAuditLogsDisabled()) {
+        if (!isEnableV2AuditLogs()) {
             audit.info(msg);
         }
 

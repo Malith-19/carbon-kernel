@@ -90,7 +90,7 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import static org.wso2.carbon.CarbonConstants.DISABLE_LEGACY_AUDIT_LOGS;
+import static org.wso2.carbon.CarbonConstants.ENABLE_V2_AUDIT_LOGS;
 
 /**
  * A collection of useful utility methods
@@ -1385,10 +1385,22 @@ public class CarbonUtils {
      * Check whether the legacy audit logs are disabled.
      *
      * @return Whether legacy audit logs are disabled.
+     * @deprecated Use {@link #isEnableV2AuditLogs()} instead.
      */
+    @Deprecated
     public static boolean isLegacyAuditLogsDisabled() {
 
-        return Boolean.parseBoolean(System.getProperty(DISABLE_LEGACY_AUDIT_LOGS));
+        return isEnableV2AuditLogs();
+    }
+
+    /**
+     * Check whether the V2 audit logs are enabled.
+     *
+     * @return Whether V2 audit logs are enabled.
+     */
+    public static boolean isEnableV2AuditLogs() {
+
+        return Boolean.parseBoolean(System.getProperty(ENABLE_V2_AUDIT_LOGS));
     }
 
     /**
