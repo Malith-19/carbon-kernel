@@ -49,7 +49,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import static org.wso2.carbon.utils.CarbonUtils.isInputValidationEnabled;
-import static org.wso2.carbon.utils.CarbonUtils.isLegacyAuditLogsDisabled;
+import static org.wso2.carbon.utils.CarbonUtils.isEnableV2AuditLogs;
 
 /**
  * This is not an AdminService, but we are retainig the name for historical reasons.
@@ -258,14 +258,14 @@ public class AuthenticationAdmin implements CarbonServerAuthenticator {
             if (delegatedBy == null && loggedInUser != null) {
                 String logMsg = "'" + loggedInUser + "@" + tenantDomain + " [" + tenantId + "]' logged out at " + date.format(currentTime);
                 log.info(logMsg);
-                if (!isLegacyAuditLogsDisabled()) {
+                if (!isEnableV2AuditLogs()) {
                     audit.info(logMsg);
                 }
             } else if (loggedInUser != null) {
                 String logMsg = "'" + loggedInUser + "@" + tenantDomain + " [" + tenantId + "]' logged out at " + date.format(currentTime)
                         + " delegated by " + delegatedBy;
                 log.info(logMsg);
-                if (!isLegacyAuditLogsDisabled()) {
+                if (!isEnableV2AuditLogs()) {
                     audit.info(logMsg);
                 }
             }

@@ -34,6 +34,7 @@ public final class CarbonConstants {
     public static final Log AUDIT_LOG = new CarbonAuditLog();
     public static final String AUDIT_MESSAGE = "Initiator : %s | Action : %s | Target : %s | Data : { %s } | Result : %s ";
     public static final String DISABLE_LEGACY_AUDIT_LOGS = "disableLegacyAuditLogs";
+    public static final String ENABLE_V2_AUDIT_LOGS = "enableV2AuditLogs";
     public enum DiagnosticLogMode {
         FULL,
         NONE
