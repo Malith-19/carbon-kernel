@@ -505,8 +505,7 @@
         <hibernate.orbit.version>3.2.5.ga-wso2v1</hibernate.orbit.version>
 
         <!-- bouncycastle -->
-        <bouncycastle.version>1.80.0.wso2v1</bouncycastle.version>
-        <bouncycastle.tls.version>1.80.0.wso2v2</bouncycastle.tls.version>
+        <bouncycastle.version>1.81.0.wso2v1</bouncycastle.version>
         <imp.pkg.version.bcp>[1.0.0, 2.0.0)</imp.pkg.version.bcp>
 
         <!--BPS specific-->
@@ -1003,11 +1002,6 @@
             <dependency>
                 <groupId>org.wso2.orbit.org.bouncycastle</groupId>
                 <artifactId>bctls-jdk18on</artifactId>
-                <version>${bouncycastle.tls.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.wso2.orbit.org.bouncycastle</groupId>
-                <artifactId>bcutil-jdk18on</artifactId>
                 <version>${bouncycastle.version}</version>
             </dependency>
             <dependency>
