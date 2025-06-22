@@ -115,8 +115,6 @@ public class CarbonStuckThreadDetectionValve extends ValveBase {
        th.setStackTrace(monitoredThread.getThread().getStackTrace());
        log.warn(msg, th);
        monitoredThread.getThread().interrupt();
-       monitoredThread.getThread().stop();  // TODO: Not a good practice, but we are using this as a last resort to kill rogue tenant threads
-       activeThreads.remove(monitoredThread.getThread().getId());
     }
 
     /**
